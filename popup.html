@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      color: #333;
+    }
+    
+    .button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+    
+    .button:hover {
+      background: #0056b3;
+    }
+    
+    .button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      text-align: center;
+    }
+    
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .section {
+      margin: 15px 0;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 6px;
+    }
+    
+    .section h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #333;
+    }
+    
+    .selected-text-display {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 10px;
+    }
+    
+    .selected-text-content {
+      background: #f8f9fa;
+      padding: 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 10px;
+      max-height: 60px;
+      overflow: hidden;
+      word-wrap: break-word;
+    }
+    
+    .no-selection {
+      color: #6c757d;
+      font-size: 12px;
+      text-align: center;
+      padding: 20px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Cursor Deeplinks</h1>
+  </div>
+  
+  <button id="activateBtn" class="button">Activate on Current Page</button>
+  
+  <div class="section">
+    <h3>Text Selection</h3>
+    <div id="selectedTextDisplay" class="selected-text-display" style="display: none;">
+      <div class="selected-text-content"></div>
+      <button id="openInCursorBtn" class="button">Open in Cursor</button>
+    </div>
+    <div id="noSelectionMessage" class="no-selection">
+      Select text on the page to open it in Cursor
+    </div>
+  </div>
+  
+  <button id="settingsBtn" class="button">Settings</button>
+  
+  <div id="status" class="status" style="display: none;"></div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
