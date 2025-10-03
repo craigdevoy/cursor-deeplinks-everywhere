@@ -31,11 +31,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       selectionTrackingEnabled = request.enabled;
       console.log('Selection tracking:', selectionTrackingEnabled ? 'enabled' : 'disabled');
       if (!selectionTrackingEnabled) {
-        // Clear current selection and hide indicators when disabled
+        // Clear current selection when disabled
         selectedText = '';
         selectedImages = [];
         selectionRange = null;
-        hideSelectionIndicator();
       }
       sendResponse({ success: true });
       break;
@@ -78,19 +77,15 @@ function trackTextSelection() {
     if (!selectionTrackingEnabled) return;
     
     const selection = window.getSelection();
-    if (selection.toString().trim()) {
-      selectedText = selection.toString().trim();
-      selectionRange = selection.getRangeAt(0);
-      console.log('Text selected:', selectedText);
-      
-      // Show selection indicator
-      showSelectionIndicator();
-    } else {
-      selectedText = '';
-      selectedImages = []; // Clear images when text selection is cleared
-      selectionRange = null;
-      hideSelectionIndicator();
-    }
+      if (selection.toString().trim()) {
+        selectedText = selection.toString().trim();
+        selectionRange = selection.getRangeAt(0);
+        console.log('Text selected:', selectedText);
+      } else {
+        selectedText = '';
+        selectedImages = []; // Clear images when text selection is cleared
+        selectionRange = null;
+      }
   });
   
   // Also track keyboard selection
@@ -102,83 +97,11 @@ function trackTextSelection() {
       if (selection.toString().trim()) {
         selectedText = selection.toString().trim();
         selectionRange = selection.getRangeAt(0);
-        showSelectionIndicator();
       }
     }
   });
 }
 
-// Show selection indicator with Cursor action
-function showSelectionIndicator() {
-  hideSelectionIndicator(); // Remove any existing indicator
-  
-  if (!selectedText) return;
-  
-  const indicator = document.createElement('div');
-  indicator.id = 'cursor-text-selection-indicator';
-  indicator.style.cssText = `
-    position: fixed;
-    background: #007bff;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    z-index: 10002;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    cursor: pointer;
-    animation: slideIn 0.3s ease-out;
-    max-width: 300px;
-    word-wrap: break-word;
-  `;
-  
-  // Build images display
-  let imagesDisplay = '';
-  if (selectedImages.length > 0) {
-    imagesDisplay = `
-      <div style="margin-bottom: 8px; font-size: 11px; opacity: 0.8;">
-        📷 ${selectedImages.length} image${selectedImages.length > 1 ? 's' : ''} included
-      </div>
-    `;
-  }
-
-  indicator.innerHTML = `
-    <div style="margin-bottom: 4px; font-weight: bold;">📝 Selected Content</div>
-    <div style="margin-bottom: 8px; opacity: 0.9; max-height: 60px; overflow: hidden;">${selectedText.substring(0, 100)}${selectedText.length > 100 ? '...' : ''}</div>
-    ${imagesDisplay}
-    <button id="openInCursorBtn" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">Open in Cursor</button>
-  `;
-  
-  // Position near selection
-  if (selectionRange) {
-    const rect = selectionRange.getBoundingClientRect();
-    indicator.style.top = `${rect.bottom + window.scrollY + 10}px`;
-    indicator.style.left = `${rect.left + window.scrollX}px`;
-  } else {
-    indicator.style.top = '100px';
-    indicator.style.right = '20px';
-  }
-  
-  document.body.appendChild(indicator);
-  
-  // Add click handler
-  document.getElementById('openInCursorBtn').addEventListener('click', () => {
-    openSelectedTextInCursor(selectedText);
-  });
-  
-  // Auto-hide after 5 seconds
-  setTimeout(() => {
-    hideSelectionIndicator();
-  }, 5000);
-}
-
-// Hide selection indicator
-function hideSelectionIndicator() {
-  const indicator = document.getElementById('cursor-text-selection-indicator');
-  if (indicator) {
-    indicator.remove();
-  }
-}
 
 // Add image to current selection
 function addImageToSelection(imageUrl) {
@@ -201,9 +124,6 @@ function addImageToSelection(imageUrl) {
   selectedImages.push(imageUrl);
   console.log('Image added to selection:', imageUrl);
   
-  // Update the selection indicator
-  showSelectionIndicator();
-  
   showNotification(`Image added to selection (${selectedImages.length} total)`);
 }
 
@@ -213,7 +133,6 @@ function openSelectedTextInCursor(text, images = []) {
     showNotification('No content selected');
     return;
   }
-  
  
     // Generate Cursor deeplink with images
     const deeplink = generateCursorPromptDeeplink(text, images);
@@ -229,8 +148,6 @@ function openSelectedTextInCursor(text, images = []) {
     
     // Clean up
     document.body.removeChild(link);
-    
-    hideSelectionIndicator();
     
 }
 
