@@ -8,8 +8,7 @@ chrome.runtime.onInstalled.addListener((details) => {
   // Set default settings
   chrome.storage.sync.set({
     deeplinksEnabled: true,
-    autoActivate: false,
-    customSchemes: ['app://', 'myapp://', 'custom://']
+    selectionTrackingEnabled: true
   });
 });
 
@@ -25,7 +24,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   switch (request.action) {
     case 'getSettings':
-      chrome.storage.sync.get(['deeplinksEnabled', 'autoActivate', 'customSchemes'], (result) => {
+      chrome.storage.sync.get(['deeplinksEnabled', 'selectionTrackingEnabled'], (result) => {
         sendResponse(result);
       });
       return true; // Keep message channel open for async response
@@ -36,110 +35,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
       return true;
       
-    case 'activateOnTab':
-      activateOnTab(request.tabId);
-      sendResponse({ success: true });
-      break;
-      
-    case 'deactivateOnTab':
-      deactivateOnTab(request.tabId);
-      sendResponse({ success: true });
-      break;
   }
 });
 
-// Activate deeplinks on a specific tab
-async function activateOnTab(tabId) {
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      function: () => {
-        // Send message to content script to activate
-        chrome.runtime.sendMessage({ action: 'activate' });
-      }
-    });
-  } catch (error) {
-    console.error('Error activating on tab:', error);
-  }
-}
 
-// Deactivate deeplinks on a specific tab
-async function deactivateOnTab(tabId) {
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      function: () => {
-        // Send message to content script to deactivate
-        chrome.runtime.sendMessage({ action: 'deactivate' });
-      }
-    });
-  } catch (error) {
-    console.error('Error deactivating on tab:', error);
-  }
-}
 
-// Handle tab updates (when user navigates to a new page)
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url) {
-    // Check if auto-activate is enabled
-    chrome.storage.sync.get(['autoActivate'], (result) => {
-      if (result.autoActivate) {
-        // Inject content script and activate
-        chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          files: ['content.js']
-        }).then(() => {
-          activateOnTab(tabId);
-        }).catch(error => {
-          console.error('Error injecting content script:', error);
-        });
-      }
-    });
-  }
-});
-
-// Context menu for deeplinks and text selection
+// Context menu for text selection
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: 'handleDeeplink',
-    title: 'Handle as Deeplink',
-    contexts: ['link']
-  });
-  
   chrome.contextMenus.create({
     id: 'openInCursor',
     title: 'Open in Cursor',
     contexts: ['selection']
   });
+  
+  chrome.contextMenus.create({
+    id: 'addImageToSelection',
+    title: 'Add Image to Selection',
+    contexts: ['image']
+  });
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === 'handleDeeplink' && info.linkUrl) {
-    // Send message to content script to handle the deeplink
-    chrome.tabs.sendMessage(tab.id, {
-      action: 'handleDeeplink',
-      url: info.linkUrl
-    });
-  } else if (info.menuItemId === 'openInCursor' && info.selectionText) {
+  if (info.menuItemId === 'openInCursor' && info.selectionText) {
     // Open selected text in Cursor
     chrome.tabs.sendMessage(tab.id, {
       action: 'openInCursor',
       text: info.selectionText
     });
+  } else if (info.menuItemId === 'addImageToSelection' && info.srcUrl) {
+    // Add image to current text selection
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'addImageToSelection',
+      imageUrl: info.srcUrl
+    });
   }
 });
 
-// Handle keyboard shortcuts
-chrome.commands.onCommand.addListener((command) => {
-  console.log('Command received:', command);
-  
-  switch (command) {
-    case 'toggle-deeplinks':
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, { action: 'toggle' });
-        }
-      });
-      break;
-  }
-});

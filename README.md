@@ -43,9 +43,10 @@ You can create simple placeholder icons or use any 16x16, 48x48, and 128x128 pix
 ### Text Selection & Cursor Integration
 
 1. **Select Text**: Highlight any text on a webpage (code, documentation, prompts, etc.)
-2. **Automatic Detection**: A blue indicator will appear showing the selected text
-3. **Open in Cursor**: Click "Open in Cursor" button or use the context menu
-4. **Seamless Integration**: The text opens as a pre-filled prompt in Cursor
+2. **Add Images**: Right-click on any image and select "Add Image to Selection"
+3. **Automatic Detection**: A blue indicator will appear showing the selected content
+4. **Open in Cursor**: Click "Open in Cursor" button or use the context menu
+5. **Seamless Integration**: The text and images open as a pre-filled prompt in Cursor
 
 ### Features
 
@@ -54,6 +55,7 @@ You can create simple placeholder icons or use any 16x16, 48x48, and 128x128 pix
 - **Status Indicator**: A blue indicator appears when deeplinks are active on a page
 - **Context Menu**: Right-click any link or selected text to handle them
 - **Text Selection**: Select any text and open it directly in Cursor as a prompt
+- **Image Integration**: Right-click images to add them to your text selection with @ prefix
 - **Keyboard Shortcuts**: Use Ctrl+Shift+D (Cmd+Shift+D on Mac) to toggle deeplinks
 
 ### Settings

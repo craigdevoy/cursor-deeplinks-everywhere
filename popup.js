@@ -1,11 +1,14 @@
 document.addEventListener('DOMContentLoaded', function() {
-  const activateBtn = document.getElementById('activateBtn');
-  const settingsBtn = document.getElementById('settingsBtn');
+//   const settingsBtn = document.getElementById('settingsBtn');
   const status = document.getElementById('status');
   const selectedTextDisplay = document.getElementById('selectedTextDisplay');
   const selectedTextContent = document.querySelector('.selected-text-content');
+  const selectedImagesDisplay = document.getElementById('selectedImagesDisplay');
+  const imagesList = document.getElementById('imagesList');
   const noSelectionMessage = document.getElementById('noSelectionMessage');
   const openInCursorBtn = document.getElementById('openInCursorBtn');
+  const enableToggle = document.getElementById('enableToggle');
+  const toggleLabel = document.getElementById('toggleLabel');
 
   // Show status message
   function showStatus(message, type = 'success') {
@@ -18,27 +21,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 3000);
   }
 
-  // Activate extension on current tab
-  activateBtn.addEventListener('click', async () => {
-    try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        function: activateDeeplinks
-      });
-      
-      showStatus('Extension activated on this page!');
-    } catch (error) {
-      console.error('Error activating extension:', error);
-      showStatus('Error activating extension', 'error');
-    }
-  });
 
   // Open settings
-  settingsBtn.addEventListener('click', () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL('settings.html') });
-  });
+//   settingsBtn.addEventListener('click', () => {
+//     chrome.tabs.create({ url: chrome.runtime.getURL('settings.html') });
+//   });
 
   // Open selected text in Cursor
   openInCursorBtn.addEventListener('click', async () => {
@@ -61,8 +48,22 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const response = await chrome.tabs.sendMessage(tab.id, { action: 'getSelectedText' });
       
-      if (response && response.text) {
-        selectedTextContent.textContent = response.text;
+      if (response && (response.text || (response.images && response.images.length > 0))) {
+        // Display text
+        if (response.text) {
+          selectedTextContent.textContent = response.text;
+        } else {
+          selectedTextContent.textContent = '[No text selected]';
+        }
+        
+        // Display images
+        if (response.images && response.images.length > 0) {
+          displayImages(response.images);
+          selectedImagesDisplay.style.display = 'block';
+        } else {
+          selectedImagesDisplay.style.display = 'none';
+        }
+        
         selectedTextDisplay.style.display = 'block';
         noSelectionMessage.style.display = 'none';
       } else {
@@ -76,33 +77,88 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Display images in the popup
+  function displayImages(images) {
+    imagesList.innerHTML = '';
+    
+    images.forEach((imageUrl, index) => {
+      const imageItem = document.createElement('div');
+      imageItem.className = 'image-item';
+      
+      imageItem.innerHTML = `
+        <img src="${imageUrl}" alt="Image ${index + 1}" onerror="this.style.display='none'">
+        <div class="image-url">${imageUrl}</div>
+      `;
+      
+      imagesList.appendChild(imageItem);
+    });
+  }
+
+  // Handle toggle switch
+  enableToggle.addEventListener('change', async () => {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const isEnabled = enableToggle.checked;
+      
+      // Send toggle message to content script
+      await chrome.tabs.sendMessage(tab.id, { 
+        action: 'toggleSelectionTracking', 
+        enabled: isEnabled 
+      });
+      
+      // Update UI state
+      updateUIState(isEnabled);
+      
+      // Save setting
+      chrome.storage.sync.set({ selectionTrackingEnabled: isEnabled });
+      
+      showStatus(isEnabled ? 'Selection tracking enabled' : 'Selection tracking disabled');
+    } catch (error) {
+      console.error('Error toggling selection tracking:', error);
+      showStatus('Error updating setting', 'error');
+    }
+  });
+
+  // Update UI based on toggle state
+  function updateUIState(isEnabled) {
+    if (isEnabled) {
+      toggleLabel.textContent = 'Text & Image Selection';
+      selectedTextDisplay.style.opacity = '1';
+      noSelectionMessage.style.opacity = '1';
+    } else {
+      toggleLabel.textContent = 'Text & Image Selection (Disabled)';
+      selectedTextDisplay.style.opacity = '0.5';
+      noSelectionMessage.style.opacity = '0.5';
+      // Clear current selection when disabled
+      selectedTextDisplay.style.display = 'none';
+      noSelectionMessage.style.display = 'block';
+    }
+  }
+
+  // Load initial toggle state
+  async function loadToggleState() {
+    try {
+      const result = await chrome.storage.sync.get(['selectionTrackingEnabled']);
+      const isEnabled = result.selectionTrackingEnabled !== false; // Default to true
+      
+      enableToggle.checked = isEnabled;
+      updateUIState(isEnabled);
+      
+      // Send initial state to content script
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      await chrome.tabs.sendMessage(tab.id, { 
+        action: 'toggleSelectionTracking', 
+        enabled: isEnabled 
+      });
+    } catch (error) {
+      console.error('Error loading toggle state:', error);
+    }
+  }
+
   // Check selected text on popup open
   checkSelectedText();
+  
+  // Load toggle state
+  loadToggleState();
 
-  // Function to inject into the page
-  function activateDeeplinks() {
-    // This function will be executed in the context of the current page
-    console.log('Deeplinks extension activated!');
-    
-    // Add a visual indicator
-    const indicator = document.createElement('div');
-    indicator.style.cssText = `
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: #007bff;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 12px;
-      z-index: 10000;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    `;
-    indicator.textContent = 'Deeplinks Active';
-    document.body.appendChild(indicator);
-    
-    setTimeout(() => {
-      indicator.remove();
-    }, 3000);
-  }
 });

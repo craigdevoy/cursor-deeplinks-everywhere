@@ -101,6 +101,112 @@
       padding: 20px;
       font-style: italic;
     }
+    
+    .no-selection small {
+      display: block;
+      margin-top: 8px;
+      opacity: 0.7;
+    }
+    
+    .selected-images-display {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #dee2e6;
+    }
+    
+    .images-header {
+      font-size: 11px;
+      font-weight: bold;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    
+    .images-list {
+      max-height: 80px;
+      overflow-y: auto;
+    }
+    
+    .image-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      padding: 4px;
+      background: #f8f9fa;
+      border-radius: 3px;
+      font-size: 10px;
+    }
+    
+    .image-item img {
+      width: 20px;
+      height: 20px;
+      object-fit: cover;
+      border-radius: 2px;
+      margin-right: 6px;
+    }
+    
+    .image-url {
+      flex: 1;
+      color: #666;
+      word-break: break-all;
+      line-height: 1.2;
+    }
+    
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .toggle-slider {
+      background-color: #007bff;
+    }
+    
+    input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+    }
+    
+    .toggle-label {
+      font-size: 14px;
+      color: #333;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -108,20 +214,33 @@
     <h1>Cursor Deeplinks</h1>
   </div>
   
-  <button id="activateBtn" class="button">Activate on Current Page</button>
-  
   <div class="section">
-    <h3>Text Selection</h3>
-    <div id="selectedTextDisplay" class="selected-text-display" style="display: none;">
-      <div class="selected-text-content"></div>
-      <button id="openInCursorBtn" class="button">Open in Cursor</button>
-    </div>
-    <div id="noSelectionMessage" class="no-selection">
-      Select text on the page to open it in Cursor
+    <h3>Extension Control</h3>
+    <div class="toggle-container">
+      <label class="toggle-switch">
+        <input type="checkbox" id="enableToggle">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label" id="toggleLabel">Text & Image Selection</span>
     </div>
   </div>
   
-  <button id="settingsBtn" class="button">Settings</button>
+  <div class="section">
+    <h3>Content Selection</h3>
+    <div id="selectedTextDisplay" class="selected-text-display" style="display: none;">
+      <div class="selected-text-content"></div>
+      <div id="selectedImagesDisplay" class="selected-images-display" style="display: none;">
+        <div class="images-header">📷 Included Images:</div>
+        <div id="imagesList" class="images-list"></div>
+      </div>
+      <button id="openInCursorBtn" class="button">Open in Cursor</button>
+    </div>
+    <div id="noSelectionMessage" class="no-selection">
+      Select text on the page to open it in Cursor<br>
+      <small>Right-click images to add them to your selection</small>
+    </div>
+  </div>
+  
   
   <div id="status" class="status" style="display: none;"></div>
   
