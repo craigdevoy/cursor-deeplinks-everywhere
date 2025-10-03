@@ -138,17 +138,33 @@ document.addEventListener('DOMContentLoaded', function() {
   // Load initial toggle state
   async function loadToggleState() {
     try {
-      const result = await chrome.storage.sync.get(['selectionTrackingEnabled']);
-      const isEnabled = result.selectionTrackingEnabled !== false; // Default to true
-      
-      enableToggle.checked = isEnabled;
-      updateUIState(isEnabled);
-      
-      // Send initial state to content script
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      
+      // First get the current state from the content script
+      let contentScriptState;
+      try {
+        const response = await chrome.tabs.sendMessage(tab.id, { 
+          action: 'getSelectionTrackingState' 
+        });
+        contentScriptState = response?.enabled;
+      } catch (error) {
+        console.log('Could not get state from content script, using storage');
+        contentScriptState = null;
+      }
+      
+      // Fallback to storage if content script doesn't respond
+      if (contentScriptState === null || contentScriptState === undefined) {
+        const result = await chrome.storage.sync.get(['selectionTrackingEnabled']);
+        contentScriptState = result.selectionTrackingEnabled !== false; // Default to true
+      }
+      
+      enableToggle.checked = contentScriptState;
+      updateUIState(contentScriptState);
+      
+      // Ensure content script is in sync
       await chrome.tabs.sendMessage(tab.id, { 
         action: 'toggleSelectionTracking', 
-        enabled: isEnabled 
+        enabled: contentScriptState 
       });
     } catch (error) {
       console.error('Error loading toggle state:', error);

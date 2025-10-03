@@ -7,6 +7,12 @@ let selectedImages = [];
 let selectionRange = null;
 let selectionTrackingEnabled = true;
 
+// Load settings from storage on initialization
+chrome.storage.sync.get(['selectionTrackingEnabled'], (result) => {
+  selectionTrackingEnabled = result.selectionTrackingEnabled !== false; // Default to true
+  console.log('Selection tracking loaded from storage:', selectionTrackingEnabled);
+});
+
 // Listen for messages from popup or background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
@@ -32,6 +38,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         hideSelectionIndicator();
       }
       sendResponse({ success: true });
+      break;
+    case 'getSelectionTrackingState':
+      sendResponse({ enabled: selectionTrackingEnabled });
       break;
   }
 });
