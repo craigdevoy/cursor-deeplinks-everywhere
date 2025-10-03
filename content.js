@@ -218,11 +218,31 @@ function openSelectedTextInCursor(text, images = []) {
     // Generate Cursor deeplink with images
     const deeplink = generateCursorPromptDeeplink(text, images);
     
+    // Create a temporary link element to handle the cursor:// protocol
+    const link = document.createElement('a');
+    link.href = deeplink;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    
     // Try to open the deeplink
-    window.location.href = deeplink;
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
     
     showNotification('Opening in Cursor...');
     hideSelectionIndicator();
+    
+    // Fallback: if cursor:// doesn't work, try after a short delay
+    setTimeout(() => {
+      // Check if we're still on the same page (cursor:// didn't redirect)
+      if (document.visibilityState === 'visible') {
+        console.log('Cursor app link may not be supported, trying fallback...');
+        // You could implement a fallback here, like copying to clipboard or showing instructions
+        showNotification('Cursor app not detected. Please ensure Cursor is installed.', 'error');
+      }
+    }, 1000);
+    
   } catch (error) {
     console.error('Error opening in Cursor:', error);
     showNotification('Error opening in Cursor', 'error');
@@ -231,10 +251,7 @@ function openSelectedTextInCursor(text, images = []) {
 
 // Generate Cursor prompt deeplink
 function generateCursorPromptDeeplink(promptText, images = []) {
-  // Use the web format for better browser compatibility
-  const url = new URL('https://cursor.com/link/prompt');
-  
-  // Combine text and images
+  // Use the cursor:// app link protocol
   let fullPrompt = promptText;
   
   if (images.length > 0) {
@@ -243,8 +260,11 @@ function generateCursorPromptDeeplink(promptText, images = []) {
     fullPrompt = `${promptText}\n\nImages:\n${imageUrls}`;
   }
   
-  url.searchParams.set('text', fullPrompt);
-  return url.toString();
+  // Encode the prompt text for URL
+  const encodedPrompt = encodeURIComponent(fullPrompt);
+  
+  // Return cursor:// protocol URL
+  return `cursor://anysphere.cursor-deeplink/prompt?text=${encodedPrompt}`;
 }
 
 // Initialize text selection tracking
