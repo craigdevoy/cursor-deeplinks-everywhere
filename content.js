@@ -214,7 +214,7 @@ function openSelectedTextInCursor(text, images = []) {
     return;
   }
   
-  try {
+ 
     // Generate Cursor deeplink with images
     const deeplink = generateCursorPromptDeeplink(text, images);
     
@@ -230,23 +230,8 @@ function openSelectedTextInCursor(text, images = []) {
     // Clean up
     document.body.removeChild(link);
     
-    showNotification('Opening in Cursor...');
     hideSelectionIndicator();
     
-    // Fallback: if cursor:// doesn't work, try after a short delay
-    setTimeout(() => {
-      // Check if we're still on the same page (cursor:// didn't redirect)
-      if (document.visibilityState === 'visible') {
-        console.log('Cursor app link may not be supported, trying fallback...');
-        // You could implement a fallback here, like copying to clipboard or showing instructions
-        showNotification('Cursor app not detected. Please ensure Cursor is installed.', 'error');
-      }
-    }, 1000);
-    
-  } catch (error) {
-    console.error('Error opening in Cursor:', error);
-    showNotification('Error opening in Cursor', 'error');
-  }
 }
 
 // Generate Cursor prompt deeplink
